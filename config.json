@@ -6,6 +6,18 @@
       "name": "电影天堂资源",
       "detail": "http://caiji.dyttzyapi.com"
     },
+    "subo": {
+      "name": "TV‑速博资源",
+      "api": "https://subocaiji.com/api.php/provide/vod"
+    },
+    "ffzy": {
+      "name": "非凡影视 New",
+      "api": "https://cj.ffzyapi.com/api.php/provide/vod"
+    },
+    "uku": {
+      "name": "TV‑U酷资源",
+      "api": "https://api.ukuapi.com/api.php/provide/vod"
+    },
     "heimuer": {
       "api": "https://json.heimuer.xyz/api.php/provide/vod",
       "name": "黑木耳",
@@ -87,3 +99,4 @@
     }
   }
 }
+
