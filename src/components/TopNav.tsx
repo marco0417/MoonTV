@@ -5,7 +5,7 @@
 import { Cat, Clover, Download, Film, History, Home, Search, Star, Trash2, Tv, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 import { getCustomCategories } from '@/lib/config.client';
 import {
@@ -16,7 +16,6 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 
-import DownloadManager from './DownloadManager';
 import { useNavigationLoading } from './NavigationLoadingProvider';
 import SearchSuggestions from './SearchSuggestions';
 import { useSite } from './SiteProvider';
@@ -28,14 +27,14 @@ interface TopNavProps {
   activePath?: string;
 }
 
-const TopNav = ({ activePath = '/' }: TopNavProps) => {
+const TopNav = ({ activePath }: TopNavProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { siteName } = useSite();
   const { startLoading } = useNavigationLoading();
 
-  const [active, setActive] = useState(activePath);
+  const [active, setActive] = useState(activePath || '/');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -54,8 +53,7 @@ const TopNav = ({ activePath = '/' }: TopNavProps) => {
   const [showSearchBar, setShowSearchBar] = useState(false);
   const searchBarRef = useRef<HTMLDivElement>(null);
 
-  // 下载管理器状态
-  const [showDownloadManager, setShowDownloadManager] = useState(false);
+  // 下载任务数量统计
   const [downloadTaskCount, setDownloadTaskCount] = useState(0);
 
   // 监听下载任务变化，更新角标
@@ -296,6 +294,8 @@ const TopNav = ({ activePath = '/' }: TopNavProps) => {
         !searchBarRef.current.contains(event.target as Node)
       ) {
         setShowSearchBar(false);
+        if (openFilter) setOpenFilter(null);
+        if (showHistory) setShowHistory(false);
       }
     };
 
@@ -303,7 +303,7 @@ const TopNav = ({ activePath = '/' }: TopNavProps) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showSearchBar]);
+  }, [showSearchBar, openFilter, showHistory]);
 
   // 点击外部关闭历史弹窗
   useEffect(() => {
@@ -538,7 +538,11 @@ const TopNav = ({ activePath = '/' }: TopNavProps) => {
         {/* 右侧按钮组 */}
         <div className='flex items-center gap-2 flex-shrink-0 mr-9'>
           <button
-            onClick={() => setShowDownloadManager(true)}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('showDownloadManager'));
+              }
+            }}
             className='p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors relative'
             title='下载管理器'
           >
@@ -554,15 +558,11 @@ const TopNav = ({ activePath = '/' }: TopNavProps) => {
         </div>
       </div>
     </header>
-
-    {/* 下载管理器 - 在 header 外部渲染，避免堆叠上下文问题 */}
-    <DownloadManager
-      isOpen={showDownloadManager}
-      onClose={() => setShowDownloadManager(false)}
-    />
     </>
   );
 };
 
-export default TopNav;
+// 使用 React.memo 优化，避免父组件更新时导致不必要的重新渲染
+// 由于 TopNav 主要依赖内部 hooks 和全局状态，不需要 props 比较函数
+export default memo(TopNav);
 
